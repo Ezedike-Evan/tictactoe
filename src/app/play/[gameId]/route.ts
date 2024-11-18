@@ -10,7 +10,7 @@ export const GET = async (
 	const { origin } = new URL(req.url);
 	const { gameId } = context.params;
 	const actionURL = new URL(
-		`${prefix}${origin}${URL_PATH}/play/${gameId}&cluster=devnet`
+		`${prefix}${origin}${URL_PATH}/play/${gameId}&cluster=mainnet`
 	);
 	return NextResponse.redirect(actionURL);
 };
