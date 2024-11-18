@@ -4,13 +4,13 @@ import { URL_PATH } from "@/helpers/utils";
 
 export const GET = async (
 	req: NextRequest,
-	context: { params: { uid: string } }
+	context: { params: { gameId: string } }
 ) => {
 	const prefix = "https://dial.to/?action=solana-action:";
 	const { origin } = new URL(req.url);
-	const { uid } = context.params;
+	const { gameId } = context.params;
 	const actionURL = new URL(
-		`${prefix}${origin}${URL_PATH}/play/${uid}&cluster=devnet`
+		`${prefix}${origin}${URL_PATH}/play/${gameId}&cluster=devnet`
 	);
 	return NextResponse.redirect(actionURL);
 };
