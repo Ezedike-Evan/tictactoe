@@ -57,7 +57,7 @@ export const POST = async (
 		const move = url.searchParams.get("move");
 		const char = url.searchParams.get("char");
 		if (!move?.trim() || !char?.trim()) {
-			throw new Error("Required fields are missing");
+			throw new Error("Required fields are missing: move and char");
 		}
 
 		await updateGameMovesandOptions(gameId, move, char);

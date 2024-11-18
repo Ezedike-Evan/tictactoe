@@ -1,4 +1,7 @@
+import { v4 as uuidv4 } from "uuid";
+
 import { getHTML, getCSS } from "./template";
+import { createRedisClient } from "./utils";
 
 export type Mark = "" | "x" | "o";
 
@@ -57,12 +60,11 @@ export const initializeNewGame = async (
 	owner: string,
 	username: string,
 	char: Mark
-) => {
-	// TODO: Connect database
-	// TODO: Create game data object
-	const newGame: Game = {};
-	// TODO: Generate new game id
-	const id = "";
+): Promise<string> => {
+	const RedisClient = await createRedisClient();
+	await RedisClient.connect();
+
+	const newGameId = uuidv4();
 	const newBoard: Board = {
 		A1: "",
 		A2: "",
@@ -74,8 +76,7 @@ export const initializeNewGame = async (
 		C2: "",
 		C3: "",
 	};
-
-	newGame[id] = {
+	const newGameData: GameData = {
 		_meta: {
 			image_url: `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`, // new board image
 			owner: { address: owner, username, mark: char },
@@ -85,80 +86,77 @@ export const initializeNewGame = async (
 		moves: [],
 	};
 
-	// TODO: Save game data
-	// TODO: Disconnect database
-	// TODO: Return game id
+	await RedisClient.hSet(newGameId, newGameData as any);
+	await RedisClient.disconnect();
+
+	return newGameId;
 };
 
 export const updateGameMovesandOptions = async (
 	gameId: string,
 	move: string,
 	char: string
-) => {
-	// TODO: Connect database
-	// TODO: Connect database
-	// TODO: Fetch game data
-	const gameData: any = {};
-	const lastMove = gameData.moves[gameData.moves.length - 1];
+): Promise<GameData> => {
+	const RedisClient = await createRedisClient();
+	await RedisClient.connect();
+	const game: any = await RedisClient.hGetAll(gameId);
+
+	const lastMove = game.moves[game.moves.length - 1];
 	lastMove[move] = char;
-	gameData.moves.push(lastMove);
-	// TODO: Pop off last played move from the options array
-	const options = Object.keys(lastMove).filter((key) => lastMove[key] == "");
-	gameData.options = options;
-	// TODO: Save game data
-	// TODO: Disconnect database
-	return gameData;
+	game.moves.push(lastMove);
+	game.options = Object.keys(lastMove).filter((key) => lastMove[key] == "");
+
+	await RedisClient.hSet(gameId, game);
+	await RedisClient.disconnect();
+	return game;
 };
 
 export const updateGameMetaData = async (gameId: string, winner?: string) => {
-	// TODO: Connect database
-	// TODO: Connect database
-	// TODO: Fetch game data
+	const RedisClient = await createRedisClient();
+	await RedisClient.connect();
 
-	// Arbitrary gam
-	const gameData: any = {};
-	// const gameData: any = {};
+	const game: any = await RedisClient.hGetAll(gameId);
+
 	if (winner) {
-		gameData._meta.state = ["W", winner];
-		gameData._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`; // we have a winner image
-		// TODO: Save game data
+		game._meta.state = ["WIN", winner];
+		game._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`; // we have a winner image
+		await RedisClient.hSet(gameId, game);
 		return;
 	}
 
-	if (!gameData.options) {
-		gameData._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`; // it's a tie image
-		gameData._meta.state = ["T", null];
-		// TODO: Save game data
+	if (!game.options) {
+		game._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`; // it's a tie image
+		game._meta.state = ["TIE", null];
+
+		await RedisClient.hSet(gameId, game);
 		return;
 	}
 
-	// gameData._meta.image_url = await generateImage(
-	// 	gameData.moves[gameData.moves.length - 1]
-	// );
-	gameData._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`;
+	// game._meta.image_url = await generateImage(game.moves[game.moves.length - 1]);
+	game._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`;
 
-	// TODO: Save game data
-	// TODO: Disconnect database
+	await RedisClient.hSet(gameId, game);
+	await RedisClient.disconnect();
 };
 
 export const fetchGameData = async (gameId: string): Promise<GameData> => {
-	// TODO: Connect database
-	// TODO: Connect database
-	// TODO: Fetch game data by id
+	const RedisClient = await createRedisClient();
+	await RedisClient.connect();
+	const game = await RedisClient.hGetAll(gameId);
 
-	// Arbitrary data
-	const game: GameData = {
-		_meta: {
-			image_url: `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`,
-			state: ["ONGOING", null],
-			owner: { address: "WALLETowner", username: "USERNAME", mark: "x" },
-		},
-		options: ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"],
-		moves: [],
-	};
+	// Arbitrary data for testsing
+	// const game: GameData = {
+	// 	_meta: {
+	// 		image_url: `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`,
+	// 		state: ["ONGOING", null],
+	// 		owner: { address: "WALLETowner", username: "USERNAME", mark: "x" },
+	// 	},
+	// 	options: ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"],
+	// 	moves: [],
+	// };
 
-	// TODO: Disconnect database
-	return game;
+	await RedisClient.disconnect();
+	return game as any;
 };
 
 export const checkIfUserCanPlay = async (
@@ -190,14 +188,12 @@ export const checkIfUserCanPlay = async (
 		return [false, "You are not a participant in this game"];
 	}
 
-	// TODO: Disconnect database
-	// Return True or Error with message
 	return [false, "It is not your turn to play"];
 };
 
 export const checkWin = async (gameId: string): Promise<boolean> => {
 	const gameData = await fetchGameData(gameId);
-	const lastMove: any = gameData.moves[gameData.moves.length - 1];
+	const lastMove = gameData.moves[gameData.moves.length - 1];
 
 	if (lastMove.A1.trim() != "") {
 		if ((lastMove.A1 == lastMove.A2) == lastMove.A3) return true; // Using mobile keypad: 1 2 3

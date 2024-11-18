@@ -7,7 +7,7 @@ import {
 } from "@solana/actions";
 
 import { HEADERS, CLUSTER_URL } from "@/helpers/utils";
-import { Mark, initializeNewGame, generateImage } from "@/helpers/game";
+import { Mark, initializeNewGame } from "@/helpers/game";
 
 export const GET = async (req: NextRequest) => {
 	return NextResponse.json(

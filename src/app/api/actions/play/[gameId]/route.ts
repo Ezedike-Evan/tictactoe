@@ -23,11 +23,7 @@ import {
 	PROCESSING_FEE,
 } from "@/helpers/utils";
 
-import {
-	generateImage,
-	fetchGameData,
-	checkIfUserCanPlay,
-} from "@/helpers/game";
+import { fetchGameData, checkIfUserCanPlay } from "@/helpers/game";
 
 const TO_PUBKEY = new PublicKey(process.env.PROGRAM_ACCOUNT!);
 
@@ -138,6 +134,9 @@ export async function POST(
 		const url = new URL(req.url);
 		const move = url.searchParams.get("move");
 		const char = url.searchParams.get("char");
+		if (!move?.trim() || !char?.trim()) {
+			throw new Error("Required fields are missing: move and char");
+		}
 
 		const payload: ActionPostResponse = await createPostResponse({
 			fields: {
