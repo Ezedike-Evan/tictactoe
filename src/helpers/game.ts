@@ -86,7 +86,7 @@ export const initializeNewGame = async (
 		moves: [],
 	};
 
-	await RedisClient.hSet(newGameId, newGameData as any);
+	await RedisClient.set(newGameId, JSON.stringify(newGameData));
 	await RedisClient.disconnect();
 
 	return newGameId;
@@ -99,14 +99,17 @@ export const updateGameMovesandOptions = async (
 ): Promise<GameData> => {
 	const RedisClient = await createRedisClient();
 	await RedisClient.connect();
-	const game: any = await RedisClient.hGetAll(gameId);
+
+	const data = await RedisClient.get(gameId);
+	if (!data?.trim()) throw new Error("invalid game id");
+	const game: GameData = JSON.parse(data);
 
 	const lastMove = game.moves[game.moves.length - 1];
 	lastMove[move] = char;
 	game.moves.push(lastMove);
 	game.options = Object.keys(lastMove).filter((key) => lastMove[key] == "");
 
-	await RedisClient.hSet(gameId, game);
+	await RedisClient.set(gameId, JSON.stringify(game));
 	await RedisClient.disconnect();
 	return game;
 };
@@ -115,12 +118,14 @@ export const updateGameMetaData = async (gameId: string, winner?: string) => {
 	const RedisClient = await createRedisClient();
 	await RedisClient.connect();
 
-	const game: any = await RedisClient.hGetAll(gameId);
+	const data = await RedisClient.get(gameId);
+	if (!data?.trim()) throw new Error("invalid game id");
+	const game: GameData = JSON.parse(data);
 
 	if (winner) {
 		game._meta.state = ["WIN", winner];
 		game._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`; // we have a winner image
-		await RedisClient.hSet(gameId, game);
+		await RedisClient.set(gameId, JSON.stringify(game));
 		return;
 	}
 
@@ -128,21 +133,24 @@ export const updateGameMetaData = async (gameId: string, winner?: string) => {
 		game._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`; // it's a tie image
 		game._meta.state = ["TIE", null];
 
-		await RedisClient.hSet(gameId, game);
+		await RedisClient.set(gameId, JSON.stringify(game));
 		return;
 	}
 
 	// game._meta.image_url = await generateImage(game.moves[game.moves.length - 1]);
 	game._meta.image_url = `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`;
 
-	await RedisClient.hSet(gameId, game);
+	await RedisClient.set(gameId, JSON.stringify(game));
 	await RedisClient.disconnect();
 };
 
 export const fetchGameData = async (gameId: string): Promise<GameData> => {
 	const RedisClient = await createRedisClient();
 	await RedisClient.connect();
-	const game = await RedisClient.hGetAll(gameId);
+
+	const data = await RedisClient.get(gameId);
+	if (!data?.trim()) throw new Error("invalid game id");
+	const game: GameData = JSON.parse(data);
 
 	// Arbitrary data for testsing
 	// const game: GameData = {
@@ -156,7 +164,7 @@ export const fetchGameData = async (gameId: string): Promise<GameData> => {
 	// };
 
 	await RedisClient.disconnect();
-	return game as any;
+	return game;
 };
 
 export const checkIfUserCanPlay = async (
