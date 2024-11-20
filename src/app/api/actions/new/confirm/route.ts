@@ -20,10 +20,7 @@ export const OPTIONS = async () => {
 	return NextResponse.json(null, { status: 200, headers: HEADERS });
 };
 
-export const POST = async (
-	req: NextRequest,
-	context: { params: { username: string } }
-) => {
+export const POST = async (req: NextRequest) => {
 	try {
 		// Solana stuff
 		const body: NextActionPostRequest = await req.json();
@@ -50,14 +47,16 @@ export const POST = async (
 
 		// Game stuff
 		const url = new URL(req.url);
-		const owner = url.searchParams.get("payer");
 		const username = url.searchParams.get("username");
-		const char = url.searchParams.get("side") as string as Mark;
-		if (!owner?.trim() || !username?.trim() || !char?.trim()) {
-			throw new Error("Required fields are missing");
+		const address = url.searchParams.get("payer");
+		const char = url.searchParams.get("side");
+		if (!username?.trim() || !address?.trim() || !char?.trim()) {
+			throw new Error(
+				"Required fields are missing: address, username and char"
+			);
 		}
 
-		const gameId = await initializeNewGame(owner, username, char);
+		const gameId = await initializeNewGame(username, address, char as Mark);
 
 		const payload: CompletedAction = {
 			type: "completed",

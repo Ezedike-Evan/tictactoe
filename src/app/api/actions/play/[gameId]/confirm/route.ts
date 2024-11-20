@@ -8,8 +8,10 @@ import {
 
 import { CLUSTER_URL, HEADERS } from "@/helpers/utils";
 import {
+	addOpponentData,
 	checkWin,
 	fetchGameData,
+	Mark,
 	updateGameMetaData,
 	updateGameMovesandOptions,
 } from "@/helpers/game";
@@ -58,6 +60,15 @@ export const POST = async (
 		const char = url.searchParams.get("char");
 		if (!move?.trim() || !char?.trim()) {
 			throw new Error("Required fields are missing: move and char");
+		}
+
+		const username = url.searchParams.get("username");
+		const address = url.searchParams.get("payer");
+		if (username) {
+			if (!username?.trim() || !address?.trim()) {
+				throw new Error("Required fields are missing: move and char");
+			}
+			addOpponentData(gameId, username, address, char as Mark);
 		}
 
 		await updateGameMovesandOptions(gameId, move, char);
