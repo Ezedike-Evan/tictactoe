@@ -12,8 +12,16 @@ export async function GET(req: NextRequest) {
 				apiPath: "/api/actions/new/**",
 			},
 			{
+				pathPattern: "/new/confirm/*",
+				apiPath: "/api/actions/new/confirm/*",
+			},
+			{
 				pathPattern: "/play/**",
 				apiPath: "/api/actions/play/**",
+			},
+			{
+				pathPattern: "/play/*/confirm/*",
+				apiPath: "/api/actions/play/*/confirm/*",
 			},
 			// idempotent rule as the fallback
 			{

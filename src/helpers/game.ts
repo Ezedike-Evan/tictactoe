@@ -57,9 +57,9 @@ export const getOptions = (moves: any) => {
 };
 
 export const initializeNewGame = async (
-	owner: string,
 	username: string,
-	char: Mark
+	address: string,
+	mark: Mark
 ): Promise<string> => {
 	const RedisClient = await createRedisClient();
 	await RedisClient.connect();
@@ -79,7 +79,7 @@ export const initializeNewGame = async (
 	const newGameData: GameData = {
 		_meta: {
 			image_url: `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`, // new board image
-			owner: { address: owner, username, mark: char },
+			owner: { address, username, mark },
 			state: ["ONGOING", null],
 		},
 		options: Object.keys(newBoard),
@@ -90,6 +90,25 @@ export const initializeNewGame = async (
 	await RedisClient.disconnect();
 
 	return newGameId;
+};
+
+export const addOpponentData = async (
+	gameId: string,
+	username: string,
+	address: string,
+	mark: Mark
+) => {
+	const RedisClient = await createRedisClient();
+	await RedisClient.connect();
+
+	const data = await RedisClient.get(gameId);
+	if (!data?.trim()) throw new Error("invalid game id");
+	const game: GameData = JSON.parse(data);
+
+	game._meta.opponent = { address, username, mark };
+
+	await RedisClient.set(gameId, JSON.stringify(game));
+	await RedisClient.disconnect();
 };
 
 export const updateGameMovesandOptions = async (

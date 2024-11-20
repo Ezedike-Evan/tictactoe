@@ -37,11 +37,12 @@ export async function GET(
 	let payload: ActionGetResponse | CompletedAction;
 
 	if (game._meta.state[0] != "ONGOING") {
+		const url = new URL(req.url);
 		const result =
 			game._meta.state[0] == "TIE"
 				? "Twas a tie"
 				: `${game._meta.state[1]} won`;
-		const url = new URL(req.url);
+
 		payload = {
 			type: "completed",
 			title: "Game over!",
@@ -53,40 +54,75 @@ export async function GET(
 		const owner = game._meta.owner;
 		const char = owner.mark == "x" ? "o" : "x";
 
-		const message =
-			game.moves.length == 0
-				? `${owner.username} picked ${owner.mark}, hence you are ${char} and you get to play first.\n\nWhat move shall you play?`
-				: "What move shall you play?";
-
-		payload = {
-			title: "Your turn!",
-			icon: game._meta.image_url,
-			description: message,
-			label: "Play",
-			links: {
-				actions: [
-					{
-						type: "transaction",
-						href: `${URL_PATH}/play/${gameId}?move={move}&char`,
-						label: "Play",
-						parameters: [
-							{
-								type: "select",
-								options: game.options.map((position) => {
-									return {
-										label: position,
-										value: position,
-									};
-								}),
-								name: "move",
-								label: "Play this move",
-								required: true,
-							},
-						],
-					},
-				],
-			},
-		} as ActionGetResponse;
+		if (game.moves.length == 0) {
+			payload = {
+				title: "Your turn!",
+				icon: game._meta.image_url,
+				description: `${
+					owner.username
+				} picked ${owner.mark.toUpperCase()}, hence you are ${char.toUpperCase()} and you get to play first.\n\nWhat move shall you play?`,
+				label: "Play",
+				links: {
+					actions: [
+						{
+							type: "transaction",
+							href: `${URL_PATH}/play/${gameId}?&username={username}&move={move}&char=${char}`,
+							label: "Play",
+							parameters: [
+								{
+									type: "text",
+									name: "username",
+									label: "Enter your username",
+									required: true,
+								},
+								{
+									type: "select",
+									options: game.options.map((position) => {
+										return {
+											label: position,
+											value: position,
+										};
+									}),
+									name: "move",
+									label: "Play this move",
+									required: true,
+								},
+							],
+						},
+					],
+				},
+			} as ActionGetResponse;
+		} else {
+			payload = {
+				title: "Your turn!",
+				icon: game._meta.image_url,
+				description: "What move shall you play?",
+				label: "Play",
+				links: {
+					actions: [
+						{
+							type: "transaction",
+							href: `${URL_PATH}/play/${gameId}?move={move}&char=${char}`,
+							label: "Play",
+							parameters: [
+								{
+									type: "select",
+									options: game.options.map((position) => {
+										return {
+											label: position,
+											value: position,
+										};
+									}),
+									name: "move",
+									label: "Play this move",
+									required: true,
+								},
+							],
+						},
+					],
+				},
+			} as ActionGetResponse;
+		}
 	}
 
 	return NextResponse.json(payload, { status: 200, headers: HEADERS });
@@ -134,6 +170,7 @@ export async function POST(
 		const url = new URL(req.url);
 		const move = url.searchParams.get("move");
 		const char = url.searchParams.get("char");
+		const username = url.searchParams.get("username");
 		if (!move?.trim() || !char?.trim()) {
 			throw new Error("Required fields are missing: move and char");
 		}
@@ -145,7 +182,7 @@ export async function POST(
 				links: {
 					next: {
 						type: "post",
-						href: `${URL_PATH}/play/${gameId}/confirm?move=${move}&char=${char}`,
+						href: `${URL_PATH}/play/${gameId}/confirm?move=${move}&char=${char}&username=${username}&payer=${payer}`,
 					},
 				},
 			},
