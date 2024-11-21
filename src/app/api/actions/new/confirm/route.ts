@@ -61,7 +61,7 @@ export const POST = async (req: NextRequest) => {
 		const payload: CompletedAction = {
 			type: "completed",
 			title: "New game created successfully!",
-			icon: `https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8`,
+			icon: "https://i.ibb.co/JdKGPQF/blank-board.png",
 			label: "Created!",
 			description: `Here is your game url:\n${url.origin}/play/${gameId}\n\nShare and challenge your friends to the ultimate tic tac toe battle.`,
 		};
