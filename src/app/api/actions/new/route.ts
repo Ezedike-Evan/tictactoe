@@ -22,7 +22,7 @@ const TO_PUBKEY = new PublicKey(process.env.PROGRAM_ACCOUNT!);
 export async function GET(req: NextRequest) {
 	const payload: ActionGetResponse = {
 		title: "Ticky Tacky Toey",
-		icon: "https://hcti.io/v1/image/2eddb997-7a52-4b01-bff9-c6b8d870c5e8", // TicTacToe logo
+		icon: "https://i.ibb.co/Yb99THB/game-image.jpg", // TicTacToe logo
 		description: "Battle of the Xs and Os.",
 		label: "Choose side",
 		links: {

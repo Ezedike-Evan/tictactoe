@@ -29,7 +29,7 @@ export const OPTIONS = async () => {
 
 export const POST = async (
 	req: NextRequest,
-	context: { params: { uid: string } }
+	context: { params: { gameId: string } }
 ) => {
 	try {
 		const body: NextActionPostRequest = await req.json();
@@ -55,7 +55,7 @@ export const POST = async (
 		}
 
 		const url = new URL(req.url);
-		const gameId = context.params.uid;
+		const gameId = context.params.gameId;
 		const move = url.searchParams.get("move");
 		const char = url.searchParams.get("char");
 		if (!move?.trim() || !char?.trim()) {
@@ -68,7 +68,7 @@ export const POST = async (
 			if (!username?.trim() || !address?.trim()) {
 				throw new Error("Required fields are missing: move and char");
 			}
-			addOpponentData(gameId, username, address, char as Mark);
+			await addOpponentData(gameId, username, address, char as Mark);
 		}
 
 		await updateGameMovesandOptions(gameId, move, char);
@@ -105,6 +105,7 @@ export const POST = async (
 
 		return NextResponse.json(payload, { status: 201, headers: HEADERS });
 	} catch (err: any) {
+		console.log({ err });
 		return NextResponse.json({ message: err.message } as ActionError, {
 			status: 400,
 			headers: HEADERS,

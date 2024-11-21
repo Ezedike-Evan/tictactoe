@@ -153,7 +153,7 @@ export async function POST(
 		const connection = new Connection(CLUSTER_URL);
 		const { blockhash } = await connection.getLatestBlockhash();
 
-		const processAnswer = SystemProgram.transfer({
+		const processPlay = SystemProgram.transfer({
 			fromPubkey: payer,
 			toPubkey: TO_PUBKEY,
 			lamports: PROCESSING_FEE * LAMPORTS_PER_SOL,
@@ -162,7 +162,7 @@ export async function POST(
 		const message = new TransactionMessage({
 			payerKey: payer,
 			recentBlockhash: blockhash,
-			instructions: [processAnswer],
+			instructions: [processPlay],
 		}).compileToV0Message();
 
 		const tx = new VersionedTransaction(message);
@@ -190,6 +190,7 @@ export async function POST(
 
 		return NextResponse.json(payload, { status: 200, headers: HEADERS });
 	} catch (err: any) {
+		console.log({ err });
 		return NextResponse.json({ message: err.message } as ActionError, {
 			status: 400,
 			headers: HEADERS,
