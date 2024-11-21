@@ -228,8 +228,8 @@ export const checkIfUserCanPlay = async (
 		return [true, ""];
 	} else if (
 		!(
-			player in
-			[gameData._meta.owner.address, gameData._meta.opponent!.address]
+			player == gameData._meta.owner.address ||
+			player == gameData._meta.opponent!.address
 		)
 	) {
 		return [false, "You are not a participant in this game"];
